@@ -1,5 +1,3 @@
--include ../stack.mk
-
 default:
 	stack build .
 test:
