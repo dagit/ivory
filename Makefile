@@ -20,15 +20,14 @@ PACKAGE= \
 
 PACKAGEDIR=$(foreach p, $(PACKAGE), $(p)/)
 
+TEST_TARGETS=ivory-model-check ivory-eval ivory-quickcheck
 
 .PHONY: test
 test: default
 	stack exec -- ivory-c-clang-test $(IVORY_EX_TEST_DIR)
 	cd $(IVORY_EX_TEST_DIR) && gcc -Wall -Wextra -I. -std=c99 -c *.c *.h -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -DIVORY_DEPLOY
 
-	stack test ivory-model-check
-	stack test ivory-eval
-	stack test ivory-quickcheck
+	stack test $(TEST_TARGETS)
 
 .PHONY: veryclean
 veryclean:
@@ -37,25 +36,10 @@ veryclean:
 
 # Travis-ci specfic ############################################################
 
-installplan.txt:
-	cabal install --only-dep --enable-tests --enable-benchmarks --dry -v \
-		$(PACKAGE:%=%/) > $@
-
-travis-install-dep:
-	cabal install --only-dep --enable-tests --enable-benchmarks $(PACKAGE:%=%/)
-
-travis-install:
-	cabal install $(PACKAGE:%=%/)
-
-travis-test = (cd $1 \
-	&& cabal configure --enable-tests \
-	&& cabal test)
+TRAVIS_STACK ?= stack --no-terminal --skip-ghc-check
 
 travis-test:
-	$(HOME)/.cabal/bin/ivory-c-clang-test $(IVORY_EX_TEST_DIR)
+	$(TRAVIS_STACK) build --test --no-run-tests --haddock --no-haddock-deps
+	$(TRAVIS_STACK) exec -- ivory-c-clang-test $(IVORY_EX_TEST_DIR)
 	cd $(IVORY_EX_TEST_DIR) && gcc -Wall -Wextra -I. -std=c99 -c *.c *.h -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -DIVORY_DEPLOY
-
-# The following are cabal "test" targets
-	$(call travis-test,ivory-model-check)
-	$(call travis-test,ivory-eval)
-	$(call travis-test,ivory-quickcheck)
+	$(TRAVIS_STACK) test $(TEST_TARGETS)
