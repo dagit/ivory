@@ -36,10 +36,10 @@ veryclean:
 
 # Travis-ci specfic ############################################################
 
-TRAVIS_STACK ?= stack --no-terminal --skip-ghc-check
+TRAVIS_STACK ?= stack --no-terminal --system-ghc --skip-ghc-check
 
 travis-test:
-	$(TRAVIS_STACK) build --test --no-run-tests --haddock --no-haddock-deps
+	$(TRAVIS_STACK) build --test --no-run-tests --haddock --no-haddock-deps --pedantic
 	$(TRAVIS_STACK) exec -- ivory-c-clang-test $(IVORY_EX_TEST_DIR)
 	cd $(IVORY_EX_TEST_DIR) && gcc -Wall -Wextra -I. -std=c99 -c *.c *.h -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -DIVORY_DEPLOY
 	$(TRAVIS_STACK) test $(TEST_TARGETS)
